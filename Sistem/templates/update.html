@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update Data Petugas</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #031d49;
+  margin: 0;
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+header {
+  width: 100%;
+  background: #F5F5F5;
+  padding: 15px 25px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-left a {
+  margin-right: 15px;
+  text-decoration: none;
+  color: #000;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.nav-left a:hover {
+  color: #1d4f8b;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-header img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}
+
+.user-header span {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.container {
+  width: 90%;
+  max-width: 400px;
+  margin: 40px 0;
+  background: #F5F5F5;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.1);
+}
+
+.form-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  width: 110px;
+  margin: 0;           
+}
+
+.form-group input {
+  flex: 1;
+}
+
+h2 {
+  margin-bottom: 10px;
+  color: #000;
+  text-align: center;
+}
+
+.checkbox-group {
+  margin-top: 15px;
+}
+
+.checkbox-group label {
+  display: block;
+  margin: 6px 0;
+  background: #ffffff;
+  padding: 5px;
+}
+
+button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  background: #042a6b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+button:hover {
+  background: #031d49;
+}
+
+footer {
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+
+@media (max-width: 768px) {
+
+  body {
+    background: #031d49;
+  }
+
+  .container {
+    width: 90%;
+    max-width: none;
+    margin: 20px 0; 
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 18px;
+  }
+
+  .container p {
+    font-size: 16px;
+  }
+
+  .checkbox-group label {
+    font-size: 16px;
+    padding: 12px 10px;
+    border-radius: 10px;
+    background: #ffffff;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+  }
+
+  .checkbox-group input {
+    transform: scale(1.25);
+    margin-right: 12px;
+  }
+
+  button {
+    position: sticky;
+    bottom: 15px;
+    font-size: 16px;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  footer {
+    margin-top: 100px;
+  }
+}
+</style>
+
+</head>
+
+<body>
+<header>
+    <div class="nav-left">
+        <a href="/">Beranda</a>
+    </div>
+
+    <div class="user-header">
+      <img id="adminIcon" src="{{ url_for('static', filename='img/user.png') }}">
+      <span id="headerName">...</span>
+    </div>
+</header>
+
+<div class="container">
+  <h2 style="text-align: center;">Update Data Anggota</h2>
+    <div class="form-group">
+      <label><b>Username</b></label>
+      <input type="text" id="editUsername">
+    </div>
+
+    <div class="form-group">
+      <label><b>Password</b></label>
+      <input type="password" id="editPassword">
+    </div>
+
+    <div class="form-group">
+      <label><b>Nama</b></label>
+      <input type="text" id="editNama">
+    </div>
+
+    <div class="form-group">
+      <label><b>Status</b></label>
+      <input type="text" id="editStatus" disabled>
+    </div>
+  <label><b>Bersedia Bertugas Pada:</b></label>
+  <div class="checkbox-group">
+    <label><input type="checkbox" value="Sabtu Sore"> Sabtu Sore</label>
+    <label><input type="checkbox" value="Minggu Pagi"> Minggu Pagi</label>
+    <label><input type="checkbox" value="Minggu Siang"> Minggu Siang</label>
+    <label><input type="checkbox" value="Minggu Sore"> Minggu Sore</label>
+    <label><input type="checkbox" value="Minggu Malam"> Minggu Malam</label>
+  </div>
+
+  <button onclick="saveUpdate()">Simpan Perubahan</button>
+</div>
+
+<footer>
+    © 2026 Paroki Katedral St. Maria Palangka Raya
+</footer>
+
+<script>
+  let loggedUsername = localStorage.getItem("loggedUser");
+
+  if (!loggedUsername) {
+    alert("Anda harus login dahulu.");
+    window.location.href = "/";
+  }
+
+  loggedUsername = loggedUsername.trim();
+
+  fetch("/get_user_data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: loggedUsername })
+  })
+  .then(async r => {
+    const data = await r.json();
+    return data;
+  })
+  .then(res => {
+    console.log("DATA:", res);
+
+    if (res.status === "success") {
+
+      document.getElementById("editUsername").value = res.username || "";
+      document.getElementById("editPassword").value = res.password || "";
+      document.getElementById("editNama").value = res.nama || "";
+      document.getElementById("editStatus").value = res.status_user || "";
+
+      document.getElementById("headerName").textContent = res.nama || "";
+
+      const avail = (res.jadwal_bisa || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(s => s);
+
+      document.querySelectorAll(".checkbox-group input").forEach(cb => {
+        cb.checked = avail.includes(cb.value);
+      });
+
+    } else {
+      alert(res.message || "Gagal memuat data petugas!");
+    }
+  })
+  .catch(err => {
+    console.error("ERROR:", err);
+    alert("Terjadi kesalahan saat memuat data!");
+  });
+
+  function saveUpdate() {
+    const selected = [];
+    document.querySelectorAll(".checkbox-group input:checked")
+      .forEach(cb => selected.push(cb.value));
+
+    const data = {
+      username_lama: loggedUsername,
+      username: document.getElementById("editUsername").value,
+      password: document.getElementById("editPassword").value,
+      nama: document.getElementById("editNama").value,
+      status: document.getElementById("editStatus").value,
+      jadwal_bisa: selected
+    };
+
+    fetch("/update_user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    })
+      .then(r => r.json())
+      .then(res => {
+        console.log("RESPON SERVER:", res);
+        if (res.status === "success") {
+          alert("Data berhasil diperbarui!");
+
+          localStorage.setItem("loggedUser", data.username);
+
+          window.location.href = "/";
+        } else {
+          alert("Gagal update data!");
+        }
+      })
+      .catch(err => {
+        console.error("Error update user:", err);
+        alert("Terjadi kesalahan saat update data!");
+      });
+  }
+
+</script>
+</body>
+</html>

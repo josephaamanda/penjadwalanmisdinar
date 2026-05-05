@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+  <style>
+    header {
+      background: #F5F5F5;
+      padding: 12px 20px;     
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-left a {
+      text-decoration: none;
+      color: #000000;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .nav-left a:hover {
+      color: #1d4f8b;
+    }
+
+    body {
+    font-family: Arial;
+    margin: 0;
+    background: #031d49;
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .admin-header img {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+    }
+
+    .admin-header span {
+      font-size: 14px;
+      font-weight: bold;
+      color: #000000;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      height: calc(100vh - 60px);
+    }
+
+    .admin-panel {
+      background: #F5F5F5; padding: 20px; border-right: 2px solid #ddd;
+      display: flex; flex-direction: column; gap: 15px;
+    }
+    .admin-panel button {
+      padding: 10px; font-size: 16px; border: none;
+      border-radius: 6px; cursor: pointer; background: #042a6b; color: white;
+    }
+
+    .admin-panel button:hover {
+      background: #031d49;
+    }
+
+    #calendar {
+      padding: 20px; margin: 20px; border-radius: 10px;
+      background: #F5F5F5; min-height: 380px;
+    }
+
+    #popupLoading {
+      position: fixed; inset: 0; display: none; justify-content: center; align-items: center;
+      background: rgba(0,0,0,0.45); z-index: 10000;
+    }
+
+    #loadingBox {
+      background: #F5F5F5; width: 350px; padding: 25px; border-radius: 10px; text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .spinner {
+      width: 45px; height: 45px; border: 5px solid #ddd; border-top: 5px solid #0078D7; border-radius: 50%;
+      animation: spin 1s linear infinite; margin: 10px auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #popupOverlay, #popupResult {
+      position: fixed; inset: 0; display: none;
+      justify-content: center; align-items: center;
+      background: rgba(0,0,0,0.45); z-index: 9999;
+    }
+
+    #popupBox, #resultBox {
+      background: #F5F5F5; padding: 22px; width: 350px;
+      border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      text-align: center; position: relative;
+    }
+
+    .close-x {
+    position: absolute; top: 12px; right: 15px; font-size: 22px; font-weight: bold;
+    cursor: pointer; color: #555;
+    }
+
+    .close-x:hover {
+      color: #000;
+    }
+
+    #popupBox input {
+      width: 90%; padding: 8px; margin-top: 10px;
+      border-radius: 6px; border: 1px solid #ccc;
+    }
+
+    .btn { padding: 8px 14px; margin-top: 10px; border-radius: 8px; cursor: pointer; border: none; }
+    .btn.ok { background: #042a6b; color: #fff; }
+    .btn.cancel { background: #777; color: #fff; }
+    .btn.ok:hover { background: #031d49; }
+    .btn.cancel:hover { background: #555; }
+    #hasilJadwal { text-align: left; margin-top: 10px; }
+
+@media (max-width: 768px) {
+
+  header {
+    padding: 10px 15px;
+  }
+
+  .nav-left a {
+    font-size: 14px;
+  }
+
+  .admin-header span {
+    font-size: 13px;
+  }
+
+  .container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .admin-panel {
+    flex-direction: row;
+    gap: 10px;
+    border-right: none;
+    border-bottom: 2px solid #ddd;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .admin-panel h2 {
+    display: none;
+  }
+
+  .admin-panel button {
+    font-size: 12px;
+    padding: 10px;
+    flex: 1;
+  }
+
+  #calendar {
+    margin: 12px;
+    padding: 12px;
+  }
+
+  #popupBox,
+  #resultBox,
+  #loadingBox {
+    width: 70%;
+    padding: 20px;
+  }
+}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-left">
+        <a href="/">Beranda</a>
+    </div>
+
+    <div class="admin-header">
+      <img id="adminIcon" src="{{ url_for('static', filename='img/user.png') }}">
+      <span>Admin</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="admin-panel">
+      <h2>Menu Admin</h2>
+      <button onclick="openPopup()">Buat Jadwal</button>
+      <button onclick="window.location.href='manage'">Kelola Data Anggota</button>
+      <button onclick="resetHistory()">Reset History Penjadwalan</button>
+      <button onclick="openPasswordPopup()">Ubah Password Admin</button>
+    </div>
+
+    <div id="calendar"></div>
+  </div>
+
+  <div id="popupOverlay">
+    <div id="popupBox">
+      <h3>Buat Jadwal</h3>
+      <label>Jadwal untuk tanggal:</label><br>
+      <input id="tanggalInput" type="text" /><br>
+
+      <div class="popup-actions">
+        <button class="btn ok" id="popupOk">OK</button>
+        <button class="btn cancel" id="popupCancel">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="popupLoading">
+    <div id="loadingBox">
+      <div class="spinner"></div>
+      <p>Sedang membuat jadwal...</p>
+    </div>
+  </div>
+
+  <div id="popupResult">
+    <div id="resultBox">
+      <span class="close-x" onclick="closeResult()">×</span>
+      <h3>Hasil Jadwal</h3>
+      <div id="hasilJadwal"></div>
+
+    </div>
+  </div>
+
+  <div id="popupPassword" style="display:none; position:fixed; inset:0; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:9999;">
+  <div id="popupBox">
+    <span class="close-x" onclick="closePasswordPopup()">×</span>
+    <h3>Ubah Password Admin</h3>
+
+    <input type="password" id="newPass" placeholder="Password Baru"><br>
+
+    <div class="popup-actions">
+      <button class="btn ok" onclick="changePassword()">Simpan</button>
+      <button class="btn cancel" onclick="closePasswordPopup()">Batal</button>
+    </div>
+  </div>
+  </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const calendar = new FullCalendar.Calendar(
+      document.getElementById('calendar'),
+      { initialView: 'dayGridMonth' }
+    );
+    calendar.render();
+  });
+
+  const popupLoading = document.getElementById("popupLoading");
+  const popupOverlay = document.getElementById("popupOverlay");
+  const tanggalInput = document.getElementById("tanggalInput");
+  const popupCancel = document.getElementById("popupCancel");
+  const popupOk = document.getElementById("popupOk");
+
+  function openPopup() {
+    tanggalInput.value = "";
+    popupOverlay.style.display = "flex";
+  }
+
+  function closePopup() {
+    popupOverlay.style.display = "none";
+  }
+
+  popupCancel.onclick = closePopup;
+
+  const popupResult = document.getElementById("popupResult");
+  const hasilJadwalDiv = document.getElementById("hasilJadwal");
+
+  function closeResult() {
+    popupResult.style.display = "none";
+  }
+
+  function convertJadwal(jadwalArr) {
+    const out = {};
+    jadwalArr.forEach(row => {
+      if (!out[row.Waktu]) out[row.Waktu] = [];
+      out[row.Waktu].push(row.Nama);
+    });
+    return out;
+  }
+
+  function showResult(jadwalGrouped) {
+    let html = "";
+    Object.keys(jadwalGrouped).forEach(shift => {
+      html += `<p><b>${shift}:</b> ${jadwalGrouped[shift].join(", ")}</p>`;
+    });
+
+    hasilJadwalDiv.innerHTML = html;
+    popupResult.style.display = "flex";
+  }
+
+  function generateGA(tanggal) {
+    popupOverlay.style.display = "none";
+    popupLoading.style.display = "flex";
+
+    fetch("/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tanggal: tanggal })
+    })
+    .then(r => r.json())
+    .then(res => {
+      popupLoading.style.display = "none";
+
+      if (res.status !== "success") {
+        alert("Gagal membuat jadwal!");
+        return;
+      }
+
+      const jadwalGrouped = convertJadwal(res.jadwal);
+      showResult(jadwalGrouped);
+    })
+    .catch(err => {
+      popupLoading.style.display = "none";
+      console.error(err);
+      alert("Terjadi kesalahan server!");
+    });
+  }
+
+  popupOk.onclick = function () {
+    const tanggal = tanggalInput.value;
+    if (!tanggal) return alert("Pilih tanggal!");
+    generateGA(tanggal);
+  };
+
+function resetHistory() {
+  if (!confirm("Yakin ingin reset semua history penjadwalan?")) return;
+
+  fetch("/reset_history", {
+    method: "POST"
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.status === "success") {
+      alert("History berhasil direset!");
+    } else {
+      alert("Gagal reset history!");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Terjadi kesalahan!");
+  });
+}
+
+const popupPassword = document.getElementById("popupPassword");
+
+function openPasswordPopup() {
+  const newPass = document.getElementById("newPass");
+
+  if (newPass) newPass.value = "";
+
+  popupPassword.style.display = "flex";
+}
+
+function closePasswordPopup() {
+  popupPassword.style.display = "none";
+}
+
+function changePassword() {
+  const newPass = document.getElementById("newPass").value;
+
+  if (!newPass) {
+    alert("Password baru tidak boleh kosong!");
+    return;
+  }
+
+  fetch("/change_admin_password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      new_password: newPass
+    })
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === "success") {
+        alert("Password berhasil diubah!");
+        closePasswordPopup();
+      } else {
+        alert("Gagal mengubah password!");
+      }
+    });
+}
+</script>
+</body>
+</html>

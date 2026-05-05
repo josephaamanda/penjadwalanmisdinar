@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola Data Petugas</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #031d49;
+  margin: 0;
+}
+
+header {
+  background: #F5F5F5;
+  padding: 15px 25px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.nav-left a {
+  margin-right: 15px;
+  text-decoration: none;
+  color: #000000;
+  font-weight: bold;
+}
+
+.nav-left a:hover {
+  color: #1d4f8b;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-header img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}
+
+.admin-header span {
+    font-weight: bold;
+}
+
+.main {
+  display: flex;
+  gap: 25px;
+  padding: 30px;
+}
+
+.list-box {
+  width: 35%;
+  background: #F5F5F5;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.list-box h3 {
+  margin-bottom: 15px;
+}
+
+.petugas-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.petugas-item:last-child {
+  border-bottom: none;
+}
+
+.petugas-item button {
+  background: #CE2626;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.petugas-item button:hover {
+  background: #a31d1d;
+}
+
+.form-box {
+  width: 65%;
+  background: #F5F5F5;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin: 12px 0 6px;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 80%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.submit-btn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  background: #042a6b;
+  color: white;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background: #031d49;
+}
+
+footer {
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  header {
+    flex-direction: row;
+    padding: 12px 15px;
+  }
+
+  .nav-left a {
+    font-size: 14px;
+  }
+
+  .admin-header span {
+    font-size: 13px;
+    font-weight: bold;
+  }
+
+  .admin-header {
+    align-self: flex-end;
+  }
+
+  .main {
+    flex-direction: column;
+    padding: 15px;
+    gap: 20px;
+    display: flex;
+    align-items: center;
+  }
+
+  .list-box,
+  .form-box {
+    width: 90%;
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .form-box {
+      order: 1;
+    }
+
+  .list-box {
+    order: 2;
+  }
+
+  .petugas-item {
+    padding: 12px 8px;
+  }
+
+  .petugas-item span {
+    font-size: 14px;
+  }
+
+  .petugas-item button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    width: 90%;
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .checkbox-group label {
+    font-size: 14px;
+  }
+
+  .submit-btn {
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="nav-left">
+    <a href="/">Beranda</a>
+    <a href="/admin">Halaman Admin</a>
+  </div>
+  <div class="admin-header">
+    <img src="{{ url_for('static', filename='img/user.png') }}">
+    <span>Admin</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="list-box">
+    <h3>Daftar Anggota</h3>
+    <div id="petugasList">
+    </div>
+  </div>
+
+  <div class="form-box">
+    <h2>Tambah Anggota</h2>
+
+    <form id="addForm">
+      <label>Username</label>
+      <input type="text" id="username" required>
+
+      <label>Password</label>
+      <input type="password" id="password" required>
+
+      <label>Nama</label>
+      <input type="text" id="nama" required>
+
+      <label>Status</label>
+      <input type="text" value="Anggota" disabled>
+
+      <label style="margin-top:15px">Bersedia Bertugas:</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" value="Sabtu Sore"> Sabtu Sore</label>
+        <label><input type="checkbox" value="Minggu Pagi"> Minggu Pagi</label>
+        <label><input type="checkbox" value="Minggu Siang"> Minggu Siang</label>
+        <label><input type="checkbox" value="Minggu Sore"> Minggu Sore</label>
+        <label><input type="checkbox" value="Minggu Malam"> Minggu Malam</label>
+      </div>
+
+      <button class="submit-btn">Simpan</button>
+    </form>
+  </div>
+
+</div>
+
+<footer>
+    © 2026 Paroki Katedral St. Maria Palangka Raya
+</footer>
+
+<script>
+async function loadPetugas() {
+  const res = await fetch("/get-petugas");
+  const data = await res.json();
+
+  const list = document.getElementById("petugasList");
+  list.innerHTML = "";
+
+  data.forEach(p => {
+    list.innerHTML += `
+      <div class="petugas-item">
+        <div>
+          <strong>${p.nama}</strong><br>
+          <small>Status:</small>
+          <select onchange="ubahStatus('${p.id}', this.value)">
+            <option value="anggota" ${p.status === "Anggota" ? "selected" : ""}>Anggota</option>
+            <option value="pengurus" ${p.status === "Pengurus" ? "selected" : ""}>Pengurus</option>
+          </select>
+        </div>
+        <button onclick="hapusPetugas('${p.id}')">Hapus</button>
+      </div>
+    `;
+  });
+}
+
+async function ubahStatus(id, status) {
+  await fetch("/update-status/" + id, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status })
+  });
+}
+
+async function hapusPetugas(id) {
+  if (!confirm("Yakin hapus petugas ini?")) return;
+
+  await fetch("/hapus-petugas/" + id, { method: "DELETE" });
+  loadPetugas();
+}
+
+document.getElementById("addForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const checks = document.querySelectorAll("input[type=checkbox]:checked");
+  const jadwal = Array.from(checks).map(c => c.value);
+
+  const res = await fetch("/add-petugas", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: username.value,
+      password: password.value,
+      nama: nama.value,
+      jadwal_bisa: jadwal
+    })
+  });
+
+  const data = await res.json();
+  alert(data.message || (data.status === "success" ? "Berhasil" : "Gagal"));
+  loadPetugas();
+  e.target.reset();
+});
+
+loadPetugas();
+</script>
+
+</body>
+</html>
