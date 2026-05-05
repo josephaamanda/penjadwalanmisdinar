@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Petugas Misdinar</title>
+
+    <style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #031d49;
+    padding-top: 90px;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: #F5F5F5;
+    padding: 10px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    z-index: 1000;
+}
+
+#adminContainer,
+#userContainer {
+    position: absolute;
+    top: 10px;
+    text-align: center;
+    cursor: pointer;
+}
+
+#adminContainer { left: 20px; }
+#userContainer { right: 20px; }
+
+.icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.menuLabel {
+    font-size: 14px;
+    color: #000000;
+    margin-top: -5px;
+}
+
+.menuLabel:hover {
+    color: #1d4f8b;
+}
+
+h1 {
+    text-align: center;
+    color: whitesmoke;
+    font-size: 22px;
+    line-height: 1.4;
+    margin-bottom: 20px;
+}
+
+#result {
+    max-width: 700px;
+    margin: 0 auto;
+    background: #F5F5F5;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.08);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #031d49;
+    color: whitesmoke;
+}
+
+#loading {
+    text-align: center;
+    margin: 20px 0;
+    display: none;
+    color: white;
+}
+
+
+#popupOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+#popupBox {
+    background: white;
+    width: 300px;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+#popupBox input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 12px;
+}
+
+#popupButtons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+#popupButtons button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#okBtn {
+    background: #042a6b;
+    color: white;
+}
+
+#okBtn:hover {
+    background: #031d49;
+}
+
+#cancelBtn {
+    background: #777;
+    color: white;
+}
+
+#cancelBtn:hover {
+    background: #555;
+}
+
+#errorMsg {
+    color: #CE2626;
+    margin-top: 10px;
+    display: none;
+}
+
+
+footer {
+    margin-top: 180px;
+    text-align: center;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+
+@media (max-width: 768px) {
+
+    body {
+        padding-top: 80px;
+    }
+
+    header {
+        height: 65px;
+        padding: 10px 15px;
+    }
+
+    #adminContainer { left: 15px; }
+    #userContainer { right: 15px; }
+
+    .icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .menuLabel {
+        font-size: 13px;
+    }
+
+    h1 {
+        font-size: 18px;
+        padding: 0 10px;
+    }
+
+    #result {
+        margin: 0 10px;
+        padding: 15px;
+    }
+
+    table {
+        font-size: 13px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    #popupBox {
+        width: 90%;
+        padding: 20px;
+    }
+
+    footer {
+        font-size: 14px;
+        margin-top: 300px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="popupOverlay">
+    <div id="popupBox">
+        <h3 id="popupTitle"></h3>
+        <div id="popupInputs"></div>
+        <div id="popupButtons">
+            <button id="okBtn" type="button">OK</button>
+            <button id="cancelBtn" type="button">Batal</button>
+        </div>
+        <p id="errorMsg"></p>
+    </div>
+</div>
+
+<header>
+    <div id="adminContainer">
+        <img class="icon" src="{{ url_for('static', filename='img/user.png') }}">
+        <div class="menuLabel">Admin</div>
+    </div>
+
+    <div id="userContainer">
+        <img class="icon" src="{{ url_for('static', filename='img/user.png') }}">
+        <div class="menuLabel">Anggota</div>
+    </div>
+</header>
+
+<h1>
+    Jadwal Petugas Misdinar <br>
+    Paroki Katedral St. Maria Palangka Raya
+</h1>
+
+<div id="loading">⏳ Memuat jadwal terbaru...</div>
+<div id="result"></div>
+
+<footer>
+    © 2026 Paroki Katedral St. Maria Palangka Raya
+</footer>
+
+
+<script>
+    function loadLatestSchedule() {
+    const loading = document.getElementById("loading");
+    const result = document.getElementById("result");
+
+    loading.style.display = "block";
+    result.innerHTML = "";
+
+    fetch("/latest-schedule")
+        .then(res => res.json())
+        .then(data => {
+            loading.style.display = "none";
+
+            if (data.status !== "success") {
+                result.innerHTML = "<p style='text-align:center;'>Belum ada jadwal tersedia.</p>";
+                return;
+            }
+
+            const grouped = {};
+            data.data.forEach(row => {
+                if (!grouped[row.Waktu]) {
+                    grouped[row.Waktu] = [];
+                }
+                grouped[row.Waktu].push(row.Nama);
+            });
+
+            let html = `
+                <h3 style="text-align:center;">
+                    ${data.filename}
+                </h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Petugas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            Object.keys(grouped).forEach(waktu => {
+                html += `
+                    <tr>
+                        <td>${waktu}</td>
+                        <td>${grouped[waktu].join(", ")}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            result.innerHTML = html;
+        })
+        .catch(() => {
+            loading.style.display = "none";
+            result.innerHTML = "<p style='color:red;text-align:center;'>Gagal memuat jadwal</p>";
+        });
+    }
+
+    window.addEventListener("load", loadLatestSchedule);
+
+    const adminContainer = document.getElementById("adminContainer");
+    const userContainer = document.getElementById("userContainer");
+    const popupOverlay = document.getElementById("popupOverlay");
+    const popupTitle = document.getElementById("popupTitle");
+    const popupInputs = document.getElementById("popupInputs");
+    const errorMsg = document.getElementById("errorMsg");
+    const okBtn = document.getElementById("okBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+
+    let popupMode = "";
+
+    adminContainer.addEventListener("click", () => {
+        popupMode = "admin";
+        popupTitle.innerText = "Masukkan Password Admin";
+        popupInputs.innerHTML = `<input type="password" id="adminPass">`;
+        errorMsg.style.display = "none";
+        popupOverlay.style.display = "flex";
+    });
+
+    userContainer.addEventListener("click", () => {
+        popupMode = "user";
+        popupTitle.innerText = "Login Anggota";
+        popupInputs.innerHTML = `
+            <input type="text" id="userName" placeholder="Username">
+            <input type="password" id="userPass" placeholder="Password">
+        `;
+        errorMsg.style.display = "none";
+        popupOverlay.style.display = "flex";
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        popupOverlay.style.display = "none";
+    });
+
+    okBtn.addEventListener("click", () => {
+        if (popupMode === "admin") {
+            fetch("/admin-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    password: document.getElementById("adminPass").value
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    window.location.href = "/admin";
+                } else {
+                    errorMsg.innerText = "Password salah!";
+                    errorMsg.style.display = "block";
+                }
+            });
+
+        } else if (popupMode === "user") {
+            fetch("/user-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: document.getElementById("userName").value,
+                    password: document.getElementById("userPass").value
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    const username = document.getElementById("userName").value;
+                    localStorage.removeItem("loggedUser");
+                    localStorage.setItem("loggedUser", username);
+                    window.location.href = "/update";
+                } else {
+                    errorMsg.innerText = "Username / password salah!";
+                    errorMsg.style.display = "block";
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
